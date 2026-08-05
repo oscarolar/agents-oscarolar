@@ -1,0 +1,18 @@
+{
+  "name": "agents-oscarolar",
+  "version": "0.1.0",
+  "description": "Oscar Alcalá's personal hub of Claude Code skills for Odoo module development, multi-version migration and CI.",
+  "author": {
+    "name": "Oscar Alcalá",
+    "url": "https://github.com/oscarolar"
+  },
+  "homepage": "https://github.com/oscarolar/agents-oscarolar",
+  "repository": "https://github.com/oscarolar/agents-oscarolar",
+  "keywords": [
+    "odoo",
+    "migration",
+    "skills",
+    "claude-code",
+    "ci"
+  ]
+}

@@ -1,0 +1,105 @@
+# Template GitHub Actions workflow: Odoo module tests + coverage,
+# running inside the official odoo/<version> Docker image.
+#
+# Copy to .github/workflows/tests.yml, adjust:
+#   - ODOO_VERSION-tagged branch filters (`on:`)
+#   - image tag (`odoo:13.0` -> your target version)
+#   - MODULES / TEST_TAGS to your actual module list
+#
+# One file per version branch if you're migrating several concurrently
+# (e.g. work-13.0 gets this pointed at odoo:13.0, work-14.0 at odoo:14.0).
+
+name: Odoo Tests & Coverage
+
+on:
+  push:
+    branches: ["work-13.0", "13.0"] # adjust per branch
+  pull_request:
+    branches: ["13.0"] # adjust: PR target = the real version branch
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    container:
+      image: odoo:13.0 # <-- pin to the version this branch targets
+      options: --user root # the image's default `odoo` user can't pip install system-wide
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: odoo
+          POSTGRES_PASSWORD: odoo
+          POSTGRES_DB: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      # Containerized jobs reach service containers by service NAME, not
+      # localhost - this is the #1 thing that trips people up moving from a
+      # non-containerized job to this pattern.
+      PGHOST: postgres
+      PGPORT: 5432
+      PGUSER: odoo
+      PGPASSWORD: odoo
+      MODULES: module_a,module_b
+      TEST_TAGS: /module_a,/module_b
+
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+
+      - name: Install coverage
+        # The image only exposes `python3 -m pip`, no bare `pip` executable.
+        run: python3 -m pip install coverage
+
+      - name: Run tests under coverage
+        run: |
+          python3 -m coverage run \
+            --source="${GITHUB_WORKSPACE}" \
+            --omit="*/tests/*" \
+            "$(command -v odoo)" \
+            -d test_db \
+            --addons-path="${GITHUB_WORKSPACE}" \
+            -i "${MODULES}" \
+            --test-enable \
+            --test-tags="${TEST_TAGS}" \
+            --stop-after-init \
+            --log-level=test \
+            --db_host="${PGHOST}" --db_user="${PGUSER}" --db_password="${PGPASSWORD}" \
+            2>&1 | tee /tmp/test.log
+
+      - name: Fail the job if any test failed
+        if: always()
+        run: |
+          # odoo's own exit code is not reliable across versions for
+          # signaling test failures - the log itself is the source of
+          # truth, same rule the main skill applies when reading logs by
+          # hand.
+          if grep -qE "modules\.module: Module .*: [1-9][0-9]* (failures|errors)" /tmp/test.log \
+             || grep -qE "tests\.runner: [1-9][0-9]* (failed|error)" /tmp/test.log \
+             || grep -q "FAIL:" /tmp/test.log; then
+            echo "::error::One or more tests failed - see the 'Run tests under coverage' step above"
+            exit 1
+          fi
+          echo "All tests passed."
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          {
+            echo "## Coverage"
+            echo '```'
+            python3 -m coverage report -m || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload full test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: odoo-test-log
+          path: /tmp/test.log

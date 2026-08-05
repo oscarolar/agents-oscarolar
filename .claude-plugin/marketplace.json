@@ -1,0 +1,15 @@
+{
+  "name": "oscarolar-hub",
+  "owner": {
+    "name": "Oscar Alcalá",
+    "url": "https://github.com/oscarolar"
+  },
+  "description": "Oscar Alcalá's personal marketplace of Claude Code skills.",
+  "plugins": [
+    {
+      "name": "agents-oscarolar",
+      "source": "./",
+      "description": "Skills for Odoo module development, multi-version migration and CI."
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+name: Validate
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  lint_markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: markdownlint
+        run: npx -y markdownlint-cli "**/*.md" --ignore node_modules
+
+  validate_structure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate JSON manifests
+        run: |
+          python3 -c "
+          import json, pathlib
+          for p in pathlib.Path('.').rglob('*.json'):
+              if 'node_modules' in p.parts:
+                  continue
+              json.loads(p.read_text())
+              print(f'{p}: OK')
+          "
+      - name: Validate skill structure and evals
+        run: python3 scripts/validate_skills.py

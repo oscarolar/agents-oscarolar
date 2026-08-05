@@ -1,0 +1,24 @@
+{
+  "evals": [
+    {
+      "prompt": "Este módulo tiene installable: True en el manifest de la rama 15.0, así que ya está migrado ahí, ¿verdad? Solo confirma y sigamos con 16.0.",
+      "expected_output": "Rechazo dar por bueno el flag sin verificar. installable: True no es prueba de que el módulo funcione - instalo el módulo en una instancia real de Odoo 15.0, corro sus tests con --test-enable, mido coverage real, y hago al menos un chequeo de navegador headless en más de una página (no solo el home) antes de decir que está migrado. Solo entonces avanzo a 16.0."
+    },
+    {
+      "prompt": "Estoy probando dos versiones de Odoo a la vez (13.0 y 14.0) desde el mismo checkout del addon, solo cambiando de rama con git checkout según cuál esté probando. Es más rápido así, ¿no?",
+      "expected_output": "No, eso es exactamente la trampa que este skill documenta: un checkout compartido cambiando de rama hace que el servidor de UNA versión termine sirviendo el código de la OTRA versión sin que se note, produciendo un 'bug' que en realidad es solo código viejo en disco. Creo un git worktree separado por versión (tanto del core de Odoo como del addon si ambos necesitan estar en ramas distintas simultáneamente) para que cada servidor vea siempre el código correcto."
+    },
+    {
+      "prompt": "Ya reformateé el comentario XML que sospechaba que rompía el render del template, y el pre-commit pasa limpio. Márcalo como arreglado.",
+      "expected_output": "Antes de marcarlo como arreglado, reproduzco el escenario ORIGINAL que falló (la página/acción exacta donde el bug se manifestó) y confirmo que ahora funciona de verdad - no basta con que el cambio 'suene plausible' o que el lint pase. Si al reproducirlo el problema sigue, seguiré investigando la causa real en vez de dar por bueno un fix que solo se ve razonable en el diff."
+    },
+    {
+      "prompt": "Solo tengo la cuenta gratuita de GitHub, ¿cómo hago para que las pruebas se corran automáticamente en cada push sin gastar de más?",
+      "expected_output": "Uso GitHub Actions (incluido en el plan gratuito) con un job que corre DENTRO de la imagen oficial odoo:<version> en vez de clonar el core e instalar requirements.txt desde cero en cada corrida - la imagen ya trae Odoo y sus dependencias instaladas vía el paquete .deb, así que solo necesito hacer checkout del repo, instalar coverage con `python3 -m pip` (la imagen no expone un `pip` suelto), y apuntar --addons-path al checkout. Publico el resultado de coverage en el job summary del run para que sea visible sin servicios externos, y hago que el job falle explícitamente si el log muestra fallos, ya que el código de salida de odoo-bin no es confiable para esto entre versiones."
+    },
+    {
+      "prompt": "Encontré que website_multi_logo se eliminó del repo en la migración a 13.0 sin dejar reemplazo. Recréala igual que estaba en 12.0 para mantener el feature.",
+      "expected_output": "Antes de recrear el código viejo, reviso si el core de Odoo 13.0 ya cubre el mismo caso de uso nativamente. Si el core ya tiene, por ejemplo, un campo de logo por sitio web, no migro el controller viejo (que además puede sobreescribir clases que ya no existen en el core moderno) - documento el equivalente nativo en el PR y dejo la app fuera de esta migración en vez de resucitar código redundante y potencialmente roto."
+    }
+  ]
+}
