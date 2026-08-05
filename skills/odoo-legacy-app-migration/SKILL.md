@@ -79,3 +79,30 @@ Key details that aren't obvious until you hit them:
 
 - `references/environment-setup.md` — concrete pyenv/worktree/pip-substitution recipes and the Odoo-version → Python-version matrix.
 - `references/github-actions-odoo.yml` — a complete, copy-adjustable GitHub Actions workflow (Docker-based, tests + coverage).
+
+## Example: Resuming a Multi-Version Migration in a Fresh Session
+
+This skill triggers on the phrasings in the frontmatter, but a cold session
+has no memory of prior version branches, PRs, or running instances — carry
+that context explicitly. Adjust the version, apps, branch/PR numbers and
+ports to your own migration:
+
+```text
+Use the agents-oscarolar:odoo-legacy-app-migration skill to continue
+migrating /path/to/my-addon-repo to Odoo 15.0.
+
+Context: 13.0 (PR #5, branch work-13.0) and 14.0 (PR #6, branch
+work-14.0) are already migrated following this methodology, with
+instances running on localhost:8069 and :8072 respectively. The apps
+are: app_a, app_b, app_c, app_d.
+
+Create a work-15.0 branch from origin/15.0 (it exists, but may have
+the same half-disabled-apps pattern 13.0/14.0 started with). Per app:
+audit its real state on that branch (don't trust `installable`),
+migrate/fix whatever's needed, port or add tests, close coverage to
+100% where reasonable, and verify with a real browser on more than one
+page (not just the homepage). Add the Docker-based GitHub Actions
+pipeline (odoo:15.0) same as on 13.0/14.0. Open a PR without merging
+directly, and leave the instance running on a port distinct from
+8069/8072 when done.
+```
