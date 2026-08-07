@@ -19,6 +19,18 @@
     {
       "prompt": "Encontré que website_multi_logo se eliminó del repo en la migración a 13.0 sin dejar reemplazo. Recréala igual que estaba en 12.0 para mantener el feature.",
       "expected_output": "Antes de recrear el código viejo, reviso si el core de Odoo 13.0 ya cubre el mismo caso de uso nativamente. Si el core ya tiene, por ejemplo, un campo de logo por sitio web, no migro el controller viejo (que además puede sobreescribir clases que ya no existen en el core moderno) - documento el equivalente nativo en el PR y dejo la app fuera de esta migración en vez de resucitar código redundante y potencialmente roto."
+    },
+    {
+      "prompt": "El pipeline de CI llevaba meses en verde y ahora falla instalando 'coverage' con un error que no había visto antes, justo después de subir la migración a la nueva versión. Algo rompimos en el código, revísalo.",
+      "expected_output": "Antes de asumir que el código de la app regresó, reviso el log completo del paso que falló - si el error es del tipo 'externally-managed-environment' o similar, lo más probable es que la imagen oficial odoo:<version> cambió de base (por ejemplo a una con Python 3.12 y PEP 668) entre corridas, no que el módulo tenga un bug nuevo. Confirmo comparando runs anteriores y, si es el caso, ajusto el paso de instalación (por ejemplo con --break-system-packages) en vez de buscar el bug en el código de la app."
+    },
+    {
+      "prompt": "Necesito verificar que el botón de agregar al carrito realmente funciona en la versión nueva. Escribe un script de Playwright que abra el navegador y haga click.",
+      "expected_output": "Antes de escribir un script externo, prefiero un JS tour nativo de Odoo (registry.category('web_tour.tours').add(...)) manejado por un test HttpCase con self.start_tour(...) - así queda dentro de la suite de tests normal y de la pipeline de CI que ya existe, sin pasos extra. Reservo un script de Playwright aparte solo para lo que un tour no puede verificar por sí mismo (por ejemplo inspeccionar un payload de dataLayer de un script de terceros). Sea cual sea el mecanismo, leo el log de consola real (no solo el resultado pasa/falla) y, si algo falla, reviso el screenshot o screencast generado antes de dar por buena o mala la verificación."
+    },
+    {
+      "prompt": "Ya terminé de migrar la app a esta versión, todos los tests pasan y el PR está listo. Márcalo como completo.",
+      "expected_output": "Antes de marcarlo como completo, reviso static/description/index.html y sus capturas de pantalla - si esta versión cambió algo visible del frontend (un botón, un campo de Settings, un layout), confirmo que las capturas todavía reflejan la UI real y regenero las que quedaron desactualizadas. Si nada visible cambió esta versión, lo digo explícitamente en el PR en vez de simplemente omitir la revisión."
     }
   ]
 }

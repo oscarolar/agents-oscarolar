@@ -1,7 +1,13 @@
 # Template GitHub Actions workflow: Odoo module tests + coverage,
 # running inside the official odoo/<version> Docker image.
 #
-# Copy to .github/workflows/tests.yml, adjust:
+# Copy to .github/workflows/tests-<version>.yml (e.g. tests-13.0.yml) -
+# NEVER a shared tests.yml reused across branches. GitHub Actions caches
+# and displays a run's workflow name keyed by file path, so if every
+# version branch reuses the same path, Actions can show a stale/wrong
+# Odoo version name in the Actions UI for runs on a different branch even
+# though the job itself is correct - easy to miss since the job passes.
+# Adjust:
 #   - ODOO_VERSION-tagged branch filters (`on:`)
 #   - image tag (`odoo:13.0` -> your target version)
 #   - MODULES / TEST_TAGS to your actual module list
@@ -54,7 +60,11 @@ jobs:
 
       - name: Install coverage
         # The image only exposes `python3 -m pip`, no bare `pip` executable.
-        run: python3 -m pip install coverage
+        # --break-system-packages: newer odoo:X.0 images (18.0+) moved to a
+        # Debian base with Python 3.12, which enforces PEP 668
+        # (externally-managed-environment) - safe here, the container is
+        # thrown away at the end of the job, not a persistent system Python.
+        run: python3 -m pip install --break-system-packages coverage
 
       - name: Run tests under coverage
         run: |
