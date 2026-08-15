@@ -1,6 +1,6 @@
 {
   "name": "agents-oscarolar",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Oscar Alcalá's personal hub of Claude Code skills for Odoo module development, multi-version migration and CI.",
   "author": "Oscar Alcalá"
 }
