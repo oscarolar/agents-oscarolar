@@ -130,6 +130,7 @@ Key details that aren't obvious until you hit them:
 
 - `references/environment-setup.md` — concrete pyenv/worktree/pip-substitution recipes and the Odoo-version → Python-version matrix.
 - `references/github-actions-odoo.yml` — a complete, copy-adjustable GitHub Actions workflow (Docker-based, tests + coverage).
+- `references/vauxoo-context.md` — **read this FIRST when the target repo lives on `git.vauxoo.com`** (e.g. `vauxoo/apps`): fork/MR topology, the GitLab CI that replaces the GitHub Actions section above, pre-commit-vauxoo autofix discipline, CONTRIBUTING review requirements (per-version `live_test_url` shortener, support key, price policy), and the post-merge App Deployer + link-tracker flow. None of it applies to personal GitHub repos.
 
 ## Example: Resuming a Multi-Version Migration in a Fresh Session
 
