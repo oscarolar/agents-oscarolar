@@ -2,8 +2,39 @@
 
 Everything in this file applies ONLY when the migration targets a repo on
 `git.vauxoo.com` (e.g. `vauxoo/apps`). It was distilled from the real
-`partner_blacklist` 12.0→19.0 series (T#102982, MRs !433/!434/!469/!500-!504),
-where every rule below caught a real failure or saved a real round-trip.
+`partner_blacklist` 12.0→19.0 series (T#102982, MRs !433/!434/!469/!500-!504)
+and the `website_sale_product_brands` 15.0→19.0 series (T#74313, MRs
+!277/!472-!475), where every rule below caught a real failure or saved a
+real round-trip.
+
+## Commit / history discipline (owner's standing rule)
+
+- **At most two commits per MR**: one `[MIG]`/`[ADD]`/`[IMP]` carrying the
+  migration *including every follow-up fix of a fix*, and optionally one
+  `[REF]` for pure lint/pipeline autofixes. Fold review fixes back into the
+  migration commit and force-push (`--force-with-lease`); never leave a
+  trail of `[FIX] ...` commits on a migration MR.
+- Preserve the original author when squashing someone else's branch
+  (`git commit --author "Name <email>"`).
+- **Squash trap**: never `git reset --soft origin/X.0` on a branch cut from
+  an old base — the resulting commit carries the *whole old tree* and
+  silently reverts everything merged into `X.0` since (CONTRIBUTING,
+  sibling modules' fixes...). The MR file count explodes (73 files instead
+  of 30) and it is easy to miss. Rebuild instead: `git checkout -B <branch>
+  origin/X.0 && git checkout <old-sha> -- <module_dir> && git commit`, then
+  assert `git diff --name-only origin/X.0..HEAD | grep -v '^<module>/'` is
+  empty **and** re-check the MR `diffs` endpoint after pushing.
+- Direct pushes to stable branches are blocked repo-wide (protected
+  branches `*`: push = No one, even for Owners). To land a "direct commit"
+  (e.g. a CONTRIBUTING backport) use MR + immediate merge: `merge_method=ff`
+  and no pipeline gate mean the fast-forward leaves exactly the cherry-pick
+  as the branch tip, no merge commit. Cherry-pick with `-x` to keep the
+  original sha and author.
+- The API `merge` call can 405 for a few seconds after MR creation while
+  GitLab computes mergeability — retry, don't assume it failed.
+- Small helper the whole session relied on: `git worktree add` one worktree
+  per version branch (`~/inst/.worktrees/<repo>-X.0`) so several docker
+  instances can mount different branches simultaneously.
 
 ## Repo / MR topology
 
@@ -36,6 +67,21 @@ where every rule below caught a real failure or saved a real round-trip.
   autofixed files, and re-run until the second pass prints "Autofix checks
   Passed" (idempotence is the proof). Usual autofix offenders: prettier on
   legacy tour JS, `po-pretty-format` rewrapping long `es.po` msgstrs.
+- **The `.po` hooks have two more opinions you only learn from a red job**:
+  (a) any `msgstr` identical to its `msgid` (e.g. `"ID"`, demo "Lorem
+  ipsum") gets emptied — never hand-fill translations that equal the source;
+  (b) msgstrs longer than the wrap width must be written as `msgstr ""` +
+  continuation line, exactly like `--i18n-export` emits them. If you fill a
+  fresh `.po` by script, run `pre-commit-vauxoo` twice locally on EVERY
+  branch before pushing — the same file passed on 16.0 and failed on
+  17.0/18.0/19.0 because each branch's export produced a slightly different
+  set of terms.
+- `odoo_warnings` (allow_failure, shows the pipeline as "warning") greps
+  the test log for `WARNING` lines. Recurring one: demo users declaring an
+  HTML `signature` as `type="xml"` (deprecated since 16.0) — fix is
+  `type="html"`; check EVERY module of the branch (`git grep 'signature"
+  type="xml"' origin/X.0`), not only the one you migrated, and open one MR
+  per warning branch.
 - **Your local pylint_odoo can be newer than CI's** and emit checks CI does
   not enforce (e.g. `category-allowed` on other modules' manifests). Before
   "fixing" anything outside your module, check whether the same check fails
@@ -77,6 +123,27 @@ where every rule below caught a real failure or saved a real round-trip.
 - `es.po` must be regenerated from a real instance of the target version
   (msgids are the DB-normalized shapes: `<t></t>`, `<br>`); reviewers check
   the `Project-Id-Version` header and exact msgid matching against the XML.
+  When exporting from a live DB you used for screenshots, first revert any
+  test data you wrote on demo records — it leaks into `msgid`s (a brand
+  description typed for a screenshot became a translatable term).
+- **A migration MR of a module that never shipped as an app** (no tests, no
+  `static/description`, no demo user, bare manifest) is not mergeable until
+  it meets the full checklist — "it installs" is not the bar. Budget for:
+  tests up to the coverage gate (model + `HttpCase` on the public page),
+  `static/description` (index.html on the Vauxoo template + banner/icon/
+  cover + feature SVGs + real screenshots per version), a rewritten
+  `README.rst` (placeholder "Instructions" and 11.0 runbot links are review
+  findings), full manifest keys and a translated `es.po`. Do it once on the
+  lowest branch, then forward-port the same set — screenshots and `es.po`
+  still get regenerated per version.
+- **Validate the demo user's groups by actually running the flow over RPC
+  as that user** (create the record, write the M2O on the target model,
+  clean up), not by reading group names: "website designer" cannot write
+  `product.template` on 15/16/17 (needs `sales_team.group_sale_manager`),
+  while 18/19 have the smaller `product.group_product_manager`. Groups
+  differ per version — the demo XML is per branch, not shared.
+- Keep the demo user's group xmlids free of the substring `admin` if you
+  can, or expect the App Deployer heuristic below to bite.
 
 ## Live-preview stack (post-merge, via odoo-mcp CLI)
 
@@ -94,6 +161,13 @@ Order matters: App Deployer first, shortener target second.
    demo login/password from the module's demo XML, and computes
    `docker_image` from the branch's `MAIN_APP`. It can only see modules that
    are MERGED on the branch — run it per version after each merge, not before.
+   Known heuristic bug (fix in app-deployer !6): `_is_admin_user_record`
+   regex-matched the bare word `admin` anywhere in the demo `<record>`, so a
+   custom group like `group_brand_admin` made the sync skip the demo user
+   and create the `deploy.app` with `demo_login = False`. Until that MR is
+   merged, verify `demo_login` right after each sync and `write` the
+   credentials on the record if empty (that is the ONLY acceptable manual
+   touch on `deploy.app`).
 2. **Shortener** (`www.vauxoo.com`, odoo-mcp profile `Vauxoo`): Odoo link
    tracker. Create `link.tracker` with
    `url = https://deployer.vauxoo.com/?appname=<module>_<XX>`,
@@ -117,3 +191,19 @@ Order matters: App Deployer first, shortener target second.
   querying `ir.ui.menu.active` for the root menu, not by clicking an
   already-provisioned instance where someone may have installed
   `sale_management` by hand.
+- Playwright against Odoo 17's login page: there are three
+  `button[type=submit]` and the first is invisible, so `page.click(...)`
+  hangs — submit with `page.press("input[name=password]", "Enter")`. On
+  ≤17 navigate via `about:blank` → full URL (a hash-only `goto` + reload
+  races the router and lands on Discuss). Odoo 18+ never reaches
+  `networkidle` (open websocket) — wait for `load` + a selector instead.
+- Odoo 19: `--i18n-export` is gone from the server CLI; use
+  `odoo i18n loadlang -d <db> -l es` then `odoo i18n export -d <db> <module>
+  -l es` (module BEFORE `-l`, which is `nargs+`), and bypass the docker
+  entrypoint (`sh -c` + `PGHOST/PGUSER/PGPASSWORD`) because it injects
+  server-only flags into any command starting with `odoo`.
+- Shared local Postgres saturates around 8-10 concurrent Odoo instances
+  (`FATAL: sorry, too many clients already`, blank backend with "Connection
+  restored" toasts, bus 500s). Stop instances you are done with before
+  starting the next version's; a "flaky" test run right after starting new
+  containers is usually this, not the code.
