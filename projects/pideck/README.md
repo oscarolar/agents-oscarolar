@@ -47,6 +47,38 @@ un bug de software.
 Alimenta la Pi por los pines 5V/GND del GPIO con una fuente de 3 A o más, o con
 un HAT PoE, y deja el USB-C exclusivamente para datos.
 
+## Sistema operativo
+
+**Raspberry Pi OS Lite (64-bit)**, la basada en Debian 13 "Trixie". Se graba con
+Raspberry Pi Imager, bajo *Raspberry Pi OS (other)*.
+
+Que sea la variante Lite no es por ahorrar espacio: es un requisito del diseño.
+La interfaz toma control directo de KMS/DRM y para eso necesita ser *DRM
+master*. Si arranca un escritorio (labwc sobre Wayland), ese control ya está
+tomado y PiDeck no puede dibujar. Lite no trae compositor, así que el camino
+queda libre — y de paso arranca en segundos y nada puede robarle el foco.
+
+Si prefieres la imagen con escritorio, funciona, pero hay que arrancar a consola:
+
+```bash
+sudo raspi-config    # System Options -> Boot / Auto Login -> Console
+```
+
+Sin ese cambio el escritorio se queda con el DRM y el servicio se reinicia en
+bucle.
+
+La variante de 64 bits es la correcta: la Pi 4 es Cortex-A72, es la que
+Raspberry Pi mantiene como principal, y trae los paquetes de Python compilados.
+
+Antes de grabar, abre las opciones avanzadas del Imager (el engrane) y
+configura hostname, usuario, contraseña, Wi-Fi y **SSH habilitado**. Sin
+escritorio, SSH es la forma práctica de editar `deck.yaml` después.
+
+Una tarjeta de 16 o 32 GB clase A1/A2 sobra; el proyecto pesa unos pocos MB.
+
+No hace falta configurar la pantalla: el driver `vc4-kms-v3d` viene activo por
+defecto en `config.txt` y SDL lee el táctil por evdev.
+
 ## Instalación
 
 ```bash
