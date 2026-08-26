@@ -1,0 +1,15 @@
+[Unit]
+Description=PiDeck USB HID gadget
+Documentation=https://github.com/oscarolar/agents-oscarolar/tree/main/projects/pideck
+# configfs must be mounted before the gadget can be created.
+After=sys-kernel-config.mount
+Wants=sys-kernel-config.mount
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=__PIDECK_DIR__/scripts/usb-gadget-up.sh
+ExecStop=__PIDECK_DIR__/scripts/usb-gadget-down.sh
+
+[Install]
+WantedBy=multi-user.target

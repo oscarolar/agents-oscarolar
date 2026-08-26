@@ -1,0 +1,290 @@
+# PiDeck configuration.
+#
+# Every button sends real keystrokes over USB, so the host PC needs no software.
+# Run `python3 -m pideck --list-keys` to print every accepted key name, and
+# `python3 -m pideck --check` after editing to validate before restarting.
+#
+# A note on the OBS page: OBS ships with no default hotkeys, so those buttons
+# send F13-F24 -- function keys that no application binds by default, which is
+# exactly why they are the right choice for a macro pad. Bind them once in
+# OBS under Settings -> Hotkeys and they will never collide with anything else.
+
+deck:
+  title: PiDeck
+  columns: 5
+  rows: 3
+  start_page: main
+  show_header: true
+
+  idle:
+    dim_after_seconds: 180
+    dim_level: 12
+
+  hid:
+    keyboard: /dev/hidg0
+    consumer: /dev/hidg1
+
+  theme:
+    background: "#101216"
+    button: "#1e2530"
+    button_pressed: "#2f80ed"
+    text: "#eef2f7"
+    muted: "#8b97a8"
+    accent: "#2f80ed"
+
+pages:
+  # ---------------------------------------------------------------- main -----
+  - id: main
+    name: Principal
+    buttons:
+      - label: "Mute mic"
+        icon: "🎙"
+        color: "#c0392b"
+        action: {type: key, keys: "ctrl+d"}          # Google Meet
+      - label: "Cámara"
+        icon: "🎥"
+        color: "#c0392b"
+        action: {type: key, keys: "ctrl+e"}          # Google Meet
+      - label: "Stream"
+        icon: "📡"
+        color: "#8e44ad"
+        action: {type: key, keys: "f17"}
+      - label: "Grabar"
+        icon: "⏺"
+        color: "#8e44ad"
+        action: {type: key, keys: "f18"}
+      - label: "Silencio"
+        icon: "🔇"
+        action: {type: media, key: mute}
+
+      - label: "Escena 1"
+        action: {type: key, keys: "f13"}
+      - label: "Escena 2"
+        action: {type: key, keys: "f14"}
+      - label: "Escena 3"
+        action: {type: key, keys: "f15"}
+      - label: "Escena 4"
+        action: {type: key, keys: "f16"}
+      - label: "Play"
+        icon: "⏯"
+        action: {type: media, key: play_pause}
+
+      - label: "OBS"
+        color: "#2f80ed"
+        action: {type: page, page: obs}
+      - label: "Dev"
+        color: "#2f80ed"
+        action: {type: page, page: dev}
+      - label: "Junta"
+        color: "#2f80ed"
+        action: {type: page, page: meet}
+      - label: "Sistema"
+        color: "#2f80ed"
+        action: {type: page, page: system}
+      - label: "Vol +"
+        icon: "🔊"
+        action: {type: media, key: volume_up}
+
+  # ----------------------------------------------------------------- obs -----
+  - id: obs
+    name: OBS Studio
+    buttons:
+      - label: "Cámara"
+        color: "#34495e"
+        action: {type: key, keys: "f13"}
+      - label: "Pantalla"
+        color: "#34495e"
+        action: {type: key, keys: "f14"}
+      - label: "Ambas"
+        color: "#34495e"
+        action: {type: key, keys: "f15"}
+      - label: "Pausa"
+        color: "#34495e"
+        action: {type: key, keys: "f16"}
+      - label: "Transición"
+        action: {type: key, keys: "f21"}
+
+      - label: "Stream"
+        icon: "📡"
+        color: "#8e44ad"
+        action: {type: key, keys: "f17"}
+      - label: "Grabar"
+        icon: "⏺"
+        color: "#c0392b"
+        action: {type: key, keys: "f18"}
+      - label: "Pausar rec"
+        action: {type: key, keys: "f19"}
+      - label: "Mute mic"
+        icon: "🎙"
+        color: "#c0392b"
+        action: {type: key, keys: "f20"}
+      - label: "Replay"
+        action: {type: key, keys: "f22"}
+
+      - label: "Fuente on"
+        action: {type: key, keys: "f23"}
+      - label: "Fuente off"
+        action: {type: key, keys: "f24"}
+      # A sequence chains steps with waits in between -- here: cut to the
+      # closing scene, hold three seconds, then stop the stream.
+      - label: "Cierre"
+        color: "#16a085"
+        action:
+          type: sequence
+          steps:
+            - key: "f16"
+            - delay: 3
+            - key: "f17"
+      - label: "◀ Volver"
+        color: "#2f80ed"
+        action: {type: page, page: main}
+        position: [2, 4]
+
+  # ----------------------------------------------------------------- dev -----
+  - id: dev
+    name: Dev / Terminal
+    buttons:
+      # VS Code defaults on Linux and Windows.
+      - label: "Paleta"
+        action: {type: key, keys: "ctrl+shift+p"}
+      - label: "Ir a archivo"
+        action: {type: key, keys: "ctrl+p"}
+      - label: "Terminal"
+        action: {type: key, keys: "ctrl+grave"}
+      - label: "Buscar todo"
+        action: {type: key, keys: "ctrl+shift+f"}
+      - label: "Git panel"
+        action: {type: key, keys: "ctrl+shift+g"}
+
+      - label: "Comentar"
+        action: {type: key, keys: "ctrl+slash"}
+      - label: "Formatear"
+        action: {type: key, keys: "ctrl+shift+i"}
+      - label: "Dividir"
+        action: {type: key, keys: "ctrl+backslash"}
+      - label: "Guardar todo"
+        color: "#16a085"
+        action:
+          type: sequence
+          steps:
+            - key: "ctrl+k"
+            - key: "s"
+      - label: "Renombrar"
+        action: {type: key, keys: "f2"}
+
+      # A 'text' action types a string exactly as a keyboard would. Edit these
+      # to match your own project -- they are the fastest thing to personalise.
+      - label: "git status"
+        color: "#7f5539"
+        action: {type: text, text: "git status\n"}
+      - label: "Tests"
+        color: "#7f5539"
+        action: {type: text, text: "pytest -x -q\n"}
+      - label: "Odoo -u"
+        color: "#7f5539"
+        action: {type: text, text: "odoo -c odoo.conf -u MODULE -d DB --test-enable --stop-after-init\n"}
+      - label: "Ctrl+C"
+        color: "#c0392b"
+        action: {type: key, keys: "ctrl+c"}
+      - label: "◀ Volver"
+        color: "#2f80ed"
+        action: {type: page, page: main}
+
+  # ---------------------------------------------------------------- meet -----
+  - id: meet
+    name: Juntas
+    buttons:
+      - label: "Meet mic"
+        icon: "🎙"
+        color: "#c0392b"
+        action: {type: key, keys: "ctrl+d"}
+      - label: "Meet cam"
+        icon: "🎥"
+        action: {type: key, keys: "ctrl+e"}
+      - label: "Meet chat"
+        action: {type: key, keys: "ctrl+alt+c"}
+      - label: "Meet manos"
+        action: {type: key, keys: "ctrl+alt+h"}
+      - label: "Pantalla completa"
+        action: {type: key, keys: "f11"}
+
+      - label: "Zoom mic"
+        icon: "🎙"
+        color: "#c0392b"
+        action: {type: key, keys: "alt+a"}
+      - label: "Zoom cam"
+        icon: "🎥"
+        action: {type: key, keys: "alt+v"}
+      - label: "Zoom compartir"
+        action: {type: key, keys: "alt+s"}
+      - label: "Zoom grabar"
+        action: {type: key, keys: "alt+r"}
+      - label: "Zoom salir"
+        color: "#c0392b"
+        action: {type: key, keys: "alt+q"}
+
+      - label: "Teams mic"
+        icon: "🎙"
+        color: "#c0392b"
+        action: {type: key, keys: "ctrl+shift+m"}
+      - label: "Teams cam"
+        icon: "🎥"
+        action: {type: key, keys: "ctrl+shift+o"}
+      - label: "Teams colgar"
+        color: "#c0392b"
+        action: {type: key, keys: "ctrl+shift+h"}
+      - label: "Silencio SO"
+        icon: "🔇"
+        action: {type: media, key: mute}
+      - label: "◀ Volver"
+        color: "#2f80ed"
+        action: {type: page, page: main}
+
+  # -------------------------------------------------------------- system -----
+  - id: system
+    name: Sistema
+    buttons:
+      - label: "Anterior"
+        icon: "⏮"
+        action: {type: media, key: previous}
+      - label: "Play"
+        icon: "⏯"
+        action: {type: media, key: play_pause}
+      - label: "Siguiente"
+        icon: "⏭"
+        action: {type: media, key: next}
+      - label: "Vol -"
+        icon: "🔉"
+        action: {type: media, key: volume_down}
+      - label: "Vol +"
+        icon: "🔊"
+        action: {type: media, key: volume_up}
+
+      - label: "Bloquear"
+        icon: "🔒"
+        action: {type: key, keys: "gui+l"}
+      - label: "Captura"
+        icon: "📸"
+        action: {type: key, keys: "gui+shift+s"}
+      - label: "Cambiar app"
+        action: {type: key, keys: "alt+tab"}
+      - label: "Escritorio"
+        action: {type: key, keys: "gui+d"}
+      - label: "Cerrar"
+        color: "#c0392b"
+        action: {type: key, keys: "alt+f4"}
+
+      # 'brightness' controls the Pi's own panel, not the host's screen.
+      - label: "Pantalla -"
+        icon: "🌑"
+        action: {type: brightness, delta: -15}
+      - label: "Pantalla +"
+        icon: "🌕"
+        action: {type: brightness, delta: 15}
+      - label: "Brillo 100"
+        action: {type: brightness, level: 100}
+      - label: "Brillo 30"
+        action: {type: brightness, level: 30}
+      - label: "◀ Volver"
+        color: "#2f80ed"
+        action: {type: page, page: main}

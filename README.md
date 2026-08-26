@@ -18,6 +18,7 @@ agents-oscarolar/
 ├── .claude-plugin/        # Claude Code plugin manifest + self-marketplace
 ├── plugin.json            # Root manifest (kept in sync with .claude-plugin/plugin.json)
 ├── skills/                # One directory per skill: SKILL.md (+ evals/, references/)
+├── projects/              # Standalone hardware/software projects, one per directory
 └── .github/workflows/     # Lint + structural validation for this repo
 ```
 
@@ -32,6 +33,12 @@ agents-oscarolar/
 ## Skills
 
 - [odoo-legacy-app-migration](skills/odoo-legacy-app-migration/SKILL.md) — Use this skill when you need to migrate a personal or legacy Odoo module across multiple major versions, one version branch at a time, verifying real installability and behavior instead of trusting manifest flags or changelogs.
+
+## Projects
+
+Standalone projects that ship with the hub but are not skills.
+
+- [pideck](projects/pideck/README.md) — turns a Raspberry Pi 4 with the official 7" touch display into a Stream Deck. The Pi presents itself to the host as a USB keyboard, so no software is installed on the computer being controlled.
 
 ## Author
 

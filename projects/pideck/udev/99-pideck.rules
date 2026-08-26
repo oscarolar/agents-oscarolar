@@ -1,0 +1,7 @@
+# Let the pideck service reach the HID gadget nodes without running as root.
+KERNEL=="hidg[0-9]*", SUBSYSTEM=="hidg", GROUP="input", MODE="0660"
+
+# The official DSI panel's backlight is named rpi_backlight on older kernels and
+# 10-0045 on current ones; cover both so brightness control works either way.
+SUBSYSTEM=="backlight", RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness"
+SUBSYSTEM=="backlight", RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness"

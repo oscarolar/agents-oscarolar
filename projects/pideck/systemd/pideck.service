@@ -1,0 +1,22 @@
+[Unit]
+Description=PiDeck touchscreen macro deck
+Documentation=https://github.com/oscarolar/agents-oscarolar/tree/main/projects/pideck
+# The gadget devices must exist before the UI opens them.
+After=pideck-gadget.service
+Requires=pideck-gadget.service
+
+[Service]
+Type=simple
+User=__PIDECK_USER__
+# video and render reach KMS/DRM, input reaches the touchscreen and the
+# /dev/hidg* nodes (see udev/99-pideck.rules).
+SupplementaryGroups=video render input
+WorkingDirectory=__PIDECK_DIR__
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONPATH=__PIDECK_DIR__/src
+ExecStart=/usr/bin/python3 -m pideck --config /etc/pideck/deck.yaml
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
