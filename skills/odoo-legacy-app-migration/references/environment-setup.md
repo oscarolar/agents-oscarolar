@@ -95,3 +95,16 @@ Read the `Missing` column. A `__manifest__.py` showing 0% is not a real gap
 those lines specifically, but treat every other 0%/partial line as a real
 question: is this route/method/branch actually reachable, and if so, why
 isn't a test reaching it?
+
+## Docker-on-macOS gotchas (Colima)
+
+- Old `odoo:<version>` images (≤15.0) ship no arm64 manifest — add
+  `--platform linux/amd64` (runs via QEMU emulation; noticeably slower, and
+  running 3-4 emulated installs concurrently can multiply that: stagger them).
+- If `docker` suddenly reports "cannot connect to the Docker daemon" at a
+  `desktop-linux` socket that doesn't exist, the CLI context is pointing at an
+  uninstalled/removed Docker Desktop — `docker context use colima` fixes it.
+- The image's entrypoint translates `HOST`/`USER`/`PASSWORD` env vars into
+  `--db_host`/`--db_user`/`--db_password` flags. Bypass the entrypoint (a
+  custom `bash -c`, or `docker exec`) and that translation is gone — pass the
+  `--db_*` flags explicitly in those cases.
