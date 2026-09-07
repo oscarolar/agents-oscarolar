@@ -1,6 +1,6 @@
 {
-  "name": "agents-oscarolar",
-  "version": "0.1.4",
-  "description": "Oscar Alcalá's personal hub of Claude Code skills for Odoo module development, multi-version migration and CI.",
+  "name": "oscarolar-personal",
+  "version": "0.2.0",
+  "description": "Oscar Alcalá's personal (GitHub) plugin of Claude Code skills for Odoo module work on personal and legacy repos.",
   "author": "Oscar Alcalá"
 }

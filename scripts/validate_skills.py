@@ -5,8 +5,9 @@ Checks (mirrors the governance rules in README.md / each skill's own
 standards, kept intentionally dependency-free so it runs anywhere):
 
 - directory name uses hyphens, never underscores
-- SKILL.md exists with YAML frontmatter containing name, category, description
-- description starts with "Use this skill when" and contains "Triggers on:"
+- SKILL.md exists with YAML frontmatter containing name and description
+- description starts with "Use " and contains a "Triggers" clause
+- the whole frontmatter block stays under 1024 characters
 - evals/evals.json exists, is valid JSON, and has at least 2 cases
 """
 import json
@@ -48,15 +49,21 @@ def validate_skill(skill_dir):
         errors.append(f"{name}: SKILL.md has no YAML frontmatter")
         return errors
 
-    for field in ("name", "category", "description"):
+    for field in ("name", "description"):
         if field not in frontmatter:
             errors.append(f"{name}: frontmatter missing '{field}'")
 
     description = frontmatter.get("description", "")
-    if not description.startswith("Use this skill when"):
-        errors.append(f"{name}: description must start with 'Use this skill when'")
-    if "Triggers on:" not in description:
-        errors.append(f"{name}: description must include a 'Triggers on:' clause")
+    if not description.startswith("Use "):
+        errors.append(f"{name}: description must start with 'Use '")
+    if "Triggers" not in description:
+        errors.append(f"{name}: description must include a 'Triggers' clause")
+
+    raw_frontmatter = re.match(r"^---\n.*?\n---\n", skill_md.read_text(), re.S)
+    if raw_frontmatter and len(raw_frontmatter.group(0)) >= 1024:
+        errors.append(
+            f"{name}: frontmatter is {len(raw_frontmatter.group(0))} chars, must stay under 1024"
+        )
 
     evals_json = skill_dir / "evals" / "evals.json"
     if not evals_json.exists():

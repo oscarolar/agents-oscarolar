@@ -7,9 +7,9 @@
   "description": "Oscar Alcalá's personal marketplace of Claude Code skills.",
   "plugins": [
     {
-      "name": "agents-oscarolar",
+      "name": "oscarolar-personal",
       "source": "./",
-      "description": "Skills for Odoo module development, multi-version migration and CI."
+      "description": "Oscar's personal (GitHub) skills for Odoo module work on personal and legacy repos."
     }
   ]
 }
