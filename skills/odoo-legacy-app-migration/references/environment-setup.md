@@ -151,3 +151,23 @@ Unlike bash. A flag stored in a shell variable
 malformed token and the command dies with a confusing "unknown flag" error.
 Write flags inline, use arrays, or `${=VAR}` when scripting loops across
 versions in the user's default shell.
+
+## Docker-on-macOS gotchas (Colima)
+
+- **Treat local Docker state as disposable across sessions.** A host reboot or VM
+  restart (Colima/Docker Desktop) can wipe containers, anonymous-volume databases
+  and even pulled images between sessions — keep every instance/DB reconstructible
+  from the branch plus one scripted `docker run ... -i <modules>` command, and never
+  store anything in a test DB you can't regenerate. A `--rm -d` container that
+  crashes on boot removes itself *with its logs* — rerun it foreground with
+  `--stop-after-init` to capture the actual error.
+- Old `odoo:<version>` images (≤15.0) ship no arm64 manifest — add
+  `--platform linux/amd64` (runs via QEMU emulation; noticeably slower, and
+  running 3-4 emulated installs concurrently can multiply that: stagger them).
+- If `docker` suddenly reports "cannot connect to the Docker daemon" at a
+  `desktop-linux` socket that doesn't exist, the CLI context is pointing at an
+  uninstalled/removed Docker Desktop — `docker context use colima` fixes it.
+- The image's entrypoint translates `HOST`/`USER`/`PASSWORD` env vars into
+  `--db_host`/`--db_user`/`--db_password` flags. Bypass the entrypoint (a
+  custom `bash -c`, or `docker exec`) and that translation is gone — pass the
+  `--db_*` flags explicitly in those cases.

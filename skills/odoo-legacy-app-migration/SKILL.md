@@ -39,7 +39,7 @@ All of these, in order, per version.
 
 1. **Lint clean.** Bootstrap `.pre-commit-config.yaml`/`.flake8`/`.pylintrc` from a reference OCA repo of the *same Odoo-version generation*, not the newest: modern suggestions can be flatly wrong on old APIs (`self.env._` doesn't exist before 17.0 and breaks at runtime). Verify each against the target core; revert the rest behind a justified `# pylint: disable=`.
 2. **Scoped test run.** `-i <modules> --test-enable --test-tags=/<module1>,/<module2>` on a *fresh* database.
-3. **Full untagged run at least once**, to catch what broke elsewhere. Read the log for FAIL/ERROR lines attributable to *your* modules; core's own meta-tests and pre-existing environment gaps are noise.
+3. **Full untagged run at least once**, to catch what broke elsewhere. Read the log for FAIL/ERROR lines attributable to *your* modules; core's own meta-tests and pre-existing environment gaps are noise. When a run drags on, `grep -c` the suspect log line over the *whole* log each tick and alert on the delta — a slow loop stays under any per-window threshold while totaling tens of thousands.
 4. **Measured coverage, not a test count.** `coverage run --source=<your modules> --omit=*/tests/* -- <odoo-bin ...>`, then `coverage report -m`: read the *Missing* column and close real gaps — uncalled routes, cron methods, exception branches, loops that no-op on an empty recordset.
 5. **Real headless-browser pass against a running instance**, using Odoo's own JS tours by default (an `HttpCase` calling `self.start_tour(...)`) so it rides inside the test runs and CI you already have. Check home *and* a listing/detail page; traps in `references/browser-verification.md`.
 6. **Audit separately any external config the app owns that references DOM selectors or URL patterns** (tag-manager export, browser-extension config). No Python/XML migration touches those, so they keep pointing at DOM that vanished two versions ago while every test passes. Rebuild them against the target's real DOM, preferring a stable value the app's JS already computes.
@@ -60,6 +60,7 @@ All of these, in order, per version.
 - Reloading the page instead of restarting the server after changing files or writing data from another process — same file.
 - Reading "zero console errors" as "the feature works" — `references/browser-verification.md`.
 - Search-and-replacing a core field name when core *replaced* the mechanism — `references/bug-classes.md`.
+- Debugging a version break from scratch without checking `references/version-api-breaks.md` first.
 - Reusing a shared `tests.yml` across branches, or expecting a bare `pip` in the image — `references/github-actions-ci.md`.
 
 ## References
@@ -68,6 +69,7 @@ All of these, in order, per version.
 - `references/browser-verification.md` — tours, console reading, screencasts, Playwright fallback, traps.
 - `references/js-modernization.md` — which legacy JS pattern maps to what in target core.
 - `references/bug-classes.md` — symptom → cause → fix table of recurring bugs.
+- `references/version-api-breaks.md` — version-keyed catalog (13.0→19.0) of core API removals/renames that broke real modules; check it BEFORE debugging a break from scratch.
 - `references/github-actions-ci.md` — the Docker-based CI approach and its gotchas; `github-actions-odoo.yml` is the workflow itself.
 - `references/resume-prompt.md` — template for resuming a migration in a fresh session.
 
