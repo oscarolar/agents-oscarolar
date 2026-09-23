@@ -1,6 +1,6 @@
 {
   "name": "oscarolar-personal",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Oscar Alcalá's personal (GitHub) plugin of Claude Code skills for Odoo module work on personal and legacy repos.",
   "author": {
     "name": "Oscar Alcalá",

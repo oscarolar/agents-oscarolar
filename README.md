@@ -31,6 +31,7 @@ oscarolar-personal/
 
 ## Skills
 
+- [smart-home](skills/smart-home/SKILL.md) — work on the Homebridge Mac mini hub (cameras, AC, Fire TV, plugs, OctoPrint, kiosk) from the private `smart-home` repo, and keep its encrypted backup pushed after every change; also restoring the Mac mini.
 - [odoo-legacy-app-migration](skills/odoo-legacy-app-migration/SKILL.md) — migrate a personal or legacy Odoo module to newer major versions, one version branch at a time, verifying real installability and behavior instead of trusting manifest flags or changelogs; also covers GitHub Actions CI for an Odoo module.
 
 ## Author

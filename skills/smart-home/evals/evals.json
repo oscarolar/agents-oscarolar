@@ -1,0 +1,12 @@
+{
+  "evals": [
+    {
+      "prompt": "rápido, el Fire TV cambió de IP a 192.168.68.140, actualízalo en homebridge del mac mini. Tengo prisa, solo eso.",
+      "expected_output": "Pulls the smart-home repo and reads AGENTS.md and the inventory first. Edits the Fire TV ip in ~/.homebridge/config.json over SSH after backing it up (python3/node, no jq), restarts with pkill -TERM -x homebridge (not hb-service restart over SSH), checks the log through a secrets filter. Then updates docs/inventory.md, pushes, runs ~/smart-home/scripts/backup.sh on the mini and confirms 'pushed'. Mentions the Deco reservation must be updated by the human. Does not treat the hurry as a reason to skip the backup."
+    },
+    {
+      "prompt": "Se murió el disco de mi Mac mini de la casa. Ya tiene macOS limpio con mi usuario oalca y SSH. Restáuralo.",
+      "expected_output": "Follows docs/runbooks/restore-mac-mini.md from the repo instead of asking the user whether backups exist: checks the age key in the Keychain, confirms the remaining human bootstrap steps (FileVault off, Homebrew installed interactively, Deco reservation, console login), runs scripts/restore.sh, hands the human the printed sudo restore-root.sh command, then runs scripts/restore.sh --verify expecting 0 differences. Does not re-pair accessories in the Home app or re-authorize Nest, because persist/ and the tokens are in the encrypted backup."
+    }
+  ]
+}
